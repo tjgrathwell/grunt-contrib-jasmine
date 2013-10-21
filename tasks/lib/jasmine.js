@@ -54,6 +54,9 @@ exports.init = function(grunt, phantomjs) {
     exports.copyTempFile(__dirname + '/../../vendor/jasmine-' + options.version + '/jasmine.css', 'jasmine.css');
     exports.copyTempFile(__dirname + '/../../vendor/jasmine-' + options.version + '/jasmine.js', 'jasmine.js');
     exports.copyTempFile(__dirname + '/../../vendor/jasmine-' + options.version + '/jasmine-html.js', 'jasmine-html.js');
+    if (options.version === "2.0.0") { // FIXME
+      exports.copyTempFile(__dirname + '/../../vendor/jasmine-' + options.version + '/boot.js', 'boot.js');
+    }
     exports.copyTempFile(__dirname + '/../jasmine/jasmine-helper.js', 'jasmine-helper.js');
     exports.copyTempFile(__dirname + '/../helpers/phantom-polyfill.js', 'phantom-polyfill.js');
 
@@ -75,6 +78,9 @@ exports.init = function(grunt, phantomjs) {
       tempDir + '/jasmine.js',
       tempDir + '/jasmine-html.js'
     ];
+    if (options.version === "2.0.0") {
+      jasmineCore.push(tempDir + '/boot.js');
+    }
 
     var jasmineHelper = tempDir + '/jasmine-helper.js';
 

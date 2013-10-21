@@ -159,7 +159,7 @@ module.exports = function(grunt) {
       grunt.event.emit.apply(grunt.event, args);
     });
 
-    phantomjs.on('jasmine.reportRunnerStarting',function(suites) {
+    phantomjs.on('jasmine.reportRunnerStarting',function() {
       grunt.verbose.writeln('Starting...');
       thisRun.start_time = (new Date()).getTime();
       thisRun.executed_specs = 0;

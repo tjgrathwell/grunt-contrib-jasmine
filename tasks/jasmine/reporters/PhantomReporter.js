@@ -25,23 +25,18 @@ phantom.sendMessage = function() {
   function PhantomReporter() {
     this.started = false;
     this.finished = false;
-    this.suites_ = [];
+    this.specIds_ = [];
     this.results_ = {};
     this.buffer = '';
   }
 
-  PhantomReporter.prototype.reportRunnerStarting = function(runner) {
+  var reportRunnerStarting = function(runner) {
     this.started = true;
 
-    var suites = runner.topLevelSuites();
-    for (var i = 0; i < suites.length; i++) {
-      var suite = suites[i];
-      this.suites_.push(this.summarize_(suite));
-    }
-    phantom.sendMessage('jasmine.reportRunnerStarting', this.suites_);
+    phantom.sendMessage('jasmine.reportRunnerStarting');
   };
 
-  PhantomReporter.prototype.reportSpecStarting = function(spec) {
+  var reportSpecStarting = function(spec) {
     spec.startTime = (new Date()).getTime();
     var message = {
       suite : {
@@ -50,10 +45,6 @@ phantom.sendMessage = function() {
       description : spec.description
     };
     phantom.sendMessage('jasmine.reportSpecStarting', message);
-  };
-
-  PhantomReporter.prototype.suites = function() {
-    return this.suites_;
   };
 
   PhantomReporter.prototype.summarize_ = function(suiteOrSpec) {
@@ -90,16 +81,19 @@ phantom.sendMessage = function() {
     return result;
   }
 
-  PhantomReporter.prototype.reportRunnerResults = function(runner) {
+  var reportRunnerResults = function(runner) {
     this.finished = true;
-    var specIds = map(runner.specs(), function(a){return a.id;});
-    var summary = this.resultsForSpecs(specIds);
+    var summary = this.resultsForSpecs(this.specIds_);
     phantom.sendMessage('jasmine.reportRunnerResults',summary);
     phantom.sendMessage('jasmine.reportJUnitResults', this.generateJUnitSummary(runner));
     phantom.sendMessage('jasmine.done.PhantomReporter');
   };
 
-  PhantomReporter.prototype.reportSuiteResults = function(suite) {
+  var reportSuiteResults = function(suite) {
+    console.error("=============> SUITE RESULT!!");
+    for (var prop in suite) {
+      console.error("=============>", prop, suite[prop]);
+    }
     if (suite.specs().length) {
       suite.timestamp = new Date();
       suite.duration = suite.timestamp.getTime() - suite.specs()[0].startTime;
@@ -147,7 +141,7 @@ phantom.sendMessage = function() {
     return string;
   }
 
-  PhantomReporter.prototype.reportSpecResults = function(spec) {
+  var reportSpecResults = function(spec) {
     spec.duration = (new Date()).getTime() - spec.startTime;
     var _results = spec.results();
     var results = {
@@ -160,6 +154,7 @@ phantom.sendMessage = function() {
       passed      : _results.passed(),
       msg         : _results.failedCount > 0 ? "failed" : "passed"
     };
+    this.specIds_.push(spec.id);
     this.results_[spec.id] = results;
 
     // Quick hack to alleviate cyclical object breaking JSONification.
@@ -282,6 +277,20 @@ phantom.sendMessage = function() {
       consolidatedSuites: consolidatedSuites
     };
   };
+
+  if (jasmine.getEnv().version()[0] === "2") {
+    PhantomReporter.prototype.jasmineStarted = reportRunnerStarting;
+    PhantomReporter.prototype.jasmineDone = reportRunnerResults;
+    PhantomReporter.prototype.suiteDone = reportSuiteResults;
+    PhantomReporter.prototype.specStarted = reportSpecStarting;
+    PhantomReporter.prototype.specDone = reportSpecResults;
+  } else {
+    PhantomReporter.prototype.reportRunnerStarting = reportRunnerStarting;
+    PhantomReporter.prototype.reportRunnerResults = reportRunnerResults;
+    PhantomReporter.prototype.reportSuiteResults = reportSuiteResults;
+    PhantomReporter.prototype.reportSpecStarting = reportSpecStarting;
+    PhantomReporter.prototype.reportSpecResults = reportSpecResults;
+  }
 
   jasmine.getEnv().addReporter( new PhantomReporter() );
 }());

@@ -62,6 +62,17 @@ module.exports = function(grunt) {
           }
         }
       },
+      latestVersion: {
+        src: 'test/fixtures/pivotal/src/**/*.js',
+        options: {
+          specs: 'test/fixtures/pivotal/spec20/*Spec.js',
+          helpers: 'test/fixtures/pivotal/spec20/*Helper.js',
+          version: '2.0.0',
+          junit: {
+            path: 'junit'
+          }
+        }
+      },
       deepOutfile: {
         src: 'test/fixtures/pivotal/src/**/*.js',
         options: {
